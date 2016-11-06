@@ -18,7 +18,12 @@ import org.w3c.dom.NodeList;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.UUID;
 
 public class App {
 
@@ -32,7 +37,7 @@ public class App {
 
         try {
 
-            final File fXmlFile = new File("/home/leandro/expenses.xml");
+            final File fXmlFile = new File(args[0]);
             final DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
             final DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
             final Document doc = dBuilder.parse(fXmlFile);
@@ -73,7 +78,7 @@ public class App {
             }
 
             LOGGER.info("Connecting to Cassandra Database");
-            final MyExpensesExporterLibrary myExpensesExporterLibrary = new MyExpensesExporterLibrary(CASSANDRA_CONTACT_POINT, "finances_core_dev");
+            final MyExpensesExporterLibrary myExpensesExporterLibrary = new MyExpensesExporterLibrary(CASSANDRA_CONTACT_POINT, args[1]);
             myExpensesExporterLibrary.connect();
             myExpensesExporterLibrary.showServerInformation();
             myExpensesExporterLibrary.initStatements();
