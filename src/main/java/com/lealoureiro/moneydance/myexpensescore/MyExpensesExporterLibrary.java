@@ -1,10 +1,16 @@
 package com.lealoureiro.moneydance.myexpensescore;
 
-import com.datastax.driver.core.*;
+import com.datastax.driver.core.BoundStatement;
+import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.Host;
+import com.datastax.driver.core.Metadata;
+import com.datastax.driver.core.PreparedStatement;
+import com.datastax.driver.core.Session;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Date;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -27,7 +33,6 @@ public class MyExpensesExporterLibrary {
     private BoundStatement addCategoryBoundStmt;
     private BoundStatement addSubCategoryBoundStmt;
 
-    private BoundStatement insertTagsByTransactionBoundStmt;
     private BoundStatement insertTransactionsByTagBoundStmt;
 
     public MyExpensesExporterLibrary(final String address, final String keySpace) {
@@ -59,7 +64,7 @@ public class MyExpensesExporterLibrary {
         final PreparedStatement insertAccountsByUserStmt = session.prepare(String.format("INSERT INTO %s.accounts_by_user (user_id,account_id) VALUES (?,?);", keySpace));
         insertAccountsByUserBoundStmt = new BoundStatement(insertAccountsByUserStmt);
 
-        final PreparedStatement insertTransactionDataStmt = session.prepare(String.format("INSERT INTO %s.transactions (transaction_id,date,account_id,amount,description,external_reference,category,sub_category) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", keySpace));
+        final PreparedStatement insertTransactionDataStmt = session.prepare(String.format("INSERT INTO %s.transactions (transaction_id,date,account_id,amount,description,category,sub_category,tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", keySpace));
         insertTransactionDataBoundStatement = new BoundStatement(insertTransactionDataStmt);
 
         final PreparedStatement addCategoryStmt = session.prepare(String.format("INSERT INTO %s.category (user_id, name) VALUES (?,?)", keySpace));
@@ -67,9 +72,6 @@ public class MyExpensesExporterLibrary {
 
         final PreparedStatement addSubCategoryStmt = session.prepare(String.format("INSERT INTO %s.sub_category (user_id, category_name, name) VALUES (?,?,?)", keySpace));
         addSubCategoryBoundStmt = new BoundStatement(addSubCategoryStmt);
-
-        final PreparedStatement insertTagsByTransactionStmt = session.prepare(String.format("INSERT INTO %s.tags_by_transaction (transaction_id,tag) VALUES (?,?)", keySpace));
-        insertTagsByTransactionBoundStmt = new BoundStatement(insertTagsByTransactionStmt);
 
         final PreparedStatement insertTransactionsByTagStmt = session.prepare(String.format("INSERT INTO %s.transactions_by_tag (tag,transaction_id) VALUES (?,?)", keySpace));
         insertTransactionsByTagBoundStmt = new BoundStatement(insertTransactionsByTagStmt);
@@ -87,8 +89,8 @@ public class MyExpensesExporterLibrary {
         session.execute(insertAccountsByUserBoundStmt.bind(userId, accountId));
     }
 
-    public void addTransaction(final UUID transactionId, final Date date, final UUID accountId, final long amount, final String description, final String transactionReference, final String category, final String subCategory) {
-        session.execute(insertTransactionDataBoundStatement.bind(transactionId, date, accountId, amount, description, transactionReference, category, subCategory));
+    public void addTransaction(final UUID transactionId, final Date date, final UUID accountId, final long amount, final String description, final String category, final String subCategory, final Set<String> tags) {
+        session.execute(insertTransactionDataBoundStatement.bind(transactionId, date, accountId, amount, description, category, subCategory, tags));
     }
 
     public void addCategory(final UUID userId, final String category) {
@@ -100,7 +102,6 @@ public class MyExpensesExporterLibrary {
     }
 
     public void addTagToTransaction(final UUID transactionId, final String tag) {
-        session.execute(insertTagsByTransactionBoundStmt.bind(transactionId, tag));
         session.execute(insertTransactionsByTagBoundStmt.bind(tag, transactionId));
     }
 

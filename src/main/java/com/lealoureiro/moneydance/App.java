@@ -20,6 +20,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -110,7 +111,14 @@ public class App {
             i = 1;
             for (final Transaction transaction : transactions) {
 
-                myExpensesExporterLibrary.addTransaction(UUID.fromString(transaction.getId()), transaction.getDate(), UUID.fromString(transaction.getAccountId()), transaction.getAmount(), transaction.getDescription(), transaction.getId(), transaction.getCategory(), transaction.getSubCategory());
+                final HashSet<String> tags = new HashSet<>();
+                for (final String tag : transaction.getTags()) {
+                    if (tag != null && !"".equals(tag)) {
+                        tags.add(tag);
+                    }
+                }
+
+                myExpensesExporterLibrary.addTransaction(UUID.fromString(transaction.getId()), transaction.getDate(), UUID.fromString(transaction.getAccountId()), transaction.getAmount(), transaction.getDescription(), transaction.getCategory(), transaction.getSubCategory(), tags);
                 for (final String tag : transaction.getTags()) {
                     if (tag != null && !"".equals(tag)) {
                         myExpensesExporterLibrary.addTagToTransaction(UUID.fromString(transaction.getId()), tag);
